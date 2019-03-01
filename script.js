@@ -1,68 +1,21 @@
-/*$(document).ready(function() {
+//Script já pronto no index
+//Desenvolvido com muito esforço
+//             por
+/////*****Felipe Strozberg*****\\\\\\
 
-    function wrapHtml(movie) {
-        var movieHtml = '<div>' +
-            '<h3>' + movie.Title + ' (' + movie.Year +') </h3>' +
-            '<img src="' + movie.Poster + '">' +
-            '</div>';
-        return movieHtml;
-    }
-
-    var searchVal = "";
-    $("#movieSearch").keyup(function() {
-        console.log( $("#movieSearch").val() );
-        var searchVal = $(this).val();
-        console.log(searchVal);
-
-        $.ajax({
-            url: 'http://www.omdbapi.com/?i=tt3896198&apikey=de97b68d' + searchVal,
-            type: 'GET',
-            dataType: 'json'
-        })
-            .done(function (data) {
-                console.log(data);
-                if (data.Response == "True"){
-                    $("#movies").html('');  // or use  $("#movies").empty();
-                    // console.log(data.Search);
-                    var search = data.Search;
-                    // view the response..
-                    // console.log(search);
-                    //----------------
-                    //for loop to display items within response. in this case Title.
-                    // for(var items in search){
-                    //   console.log(search[items].Title)
-                    // }
-                    //---------
-                    search.forEach(function(movie){
-                        // console log to view data..   (leaving this in to show the process)
-                        // console.log("Title : " + movie.Title)
-                        // console.log("Poster : " + movie.Poster)
-                        // console.log("Year : " + movie.Year)
-                        // console.log(" : " + movie.Year)
-
-                        // $('#movies').append(moviehtml);  // moved into a function at top.
-                        $('#movies').append(wrapHtml(movie));
-                    });
-                } else{
-                    $("#movies").html('No results found. Keep typing!');  // or use  $("#movies").empty();
-                }
-            })
-            .error(function (){
-                console.log("Error!");
-            });
-
-    });
-
-});*/
-
-function wrapHtml(movie) {
+//Função criada para captar a informação gerada pelo clique do mouse no li e
+//capta as informações do json fornecido pela API como o ID dos filmes e trata eles, transformando em
+//variáveis para serem mostradas.
+function gerarHtml(movie) {
         var a= $.ajax({
             url: "http://www.omdbapi.com/?apikey=de97b68d&",
             async: true,
             type: "get",
-            data: { i: movie },
+            data: { i: movie }, //i pois só importa o dado do filme escolhido pelo clique do mouse
             dataType: "json"
         });
+        //Tratamento das informações para serem armazenadas em variáveis
+        //Tratamento das opções inválidas obtidas
         a.done(function(result){
                 var title = result['Title'];
                 if(title == 'N/A' || title == null) {
@@ -72,62 +25,61 @@ function wrapHtml(movie) {
                 if(website == 'N/A' || website == null) {
                     website = "Infelizmente n&#227;o temos essa informa&#231;&#227;o :(";
                 }
+                var year = result['Year'];
+                if(year == 'N/A' || year == null) {
+                    year = "Infelizmente n&#227;o temos essa informa&#231;&#227;o :(";
+                }
+                var runtime = result['Runtime'];
+                if(runtime == 'N/A' || runtime == null) {
+                    runtime = "Infelizmente n&#227;o temos essa informa&#231;&#227;o :(";
+                }
+                var genre = result['Genre'];
+                if(genre == 'N/A' || genre == null) {
+                    genre = "Infelizmente n&#227;o temos essa informa&#231;&#227;o :(";
+                }
+                var poster = result['Poster'];
+                if(poster == 'N/A' || poster == null) {
+                    poster = "Infelizmente n&#227;o temos essa informa&#231;&#227;o :(";
+                }
                 //innerhtml
-                $('#movieDetails').html("");
-                $('#movieDetails').append("<h3> Title: " + title +"</h3><h3>"+ result['Year']+"</h3><h3>"+ result['Runtime']+"</h3><h3>"+ result['Genre']+"</h3><h3>"+ website + "</h3><img src='" + result["Poster"] + "'></img>");
+                //Limpa a visão do html para receber novas informações
+                $('#detalFilme').html("");
+
+                //Exibe as informações tratadas por tópicos
+                $('#detalFilme').append("<h3> Title: " + title +" </h3><h3> Year: " + year +" </h3><h3> Runtime: "+ runtime +"</h3><h3> Genre: "+ genre + "</h3><h3> Site: "+ website + "</h3><img src='" + poster + "'></img>");
         });
-    //alert(movie);
+    //alert(movie); teste
 }
+//Começa a ligação de informações do usuário com o banco de dados do API
 $(document).ready(function(){
 
-    $('#movieSearch').submit(function(e){
+    //Envia o filme para ser requisitado no servidor
+    $('#proqFilme').submit(function(e){
         e.preventDefault();
-        var userInput = $('#searchTerm').val();
+
+        //Entrada de dados do usuário
+        var userInput = $('#procurarTermo').val();
+
+        //Limpa tanto os resultados, quanto os detalhes para uma nova pesquisa que será realizada
         $('#results').html("");
-        $('#movieDetails').html("");
+        $('#detalFilme').html("");
+
+        //Faz a requisição para o servidor
         var request = $.ajax({
             url: "http://www.omdbapi.com/?apikey=de97b68d&",
             async: true,
             type: "get",
-            data: { s: userInput },
+            data: { s: userInput }, //Usa-se o S para retornar todas as opções relacionadas ao filme digitado
             dataType: "json"
         });
 
+        //Assim que a requisição retorna e recebe a informação, nesse caso o ID do filme, ele mostra na tela
+        //Todos os resultados relacionados ao filme digitado.
+        //Espera o clique do mouse para voltar a função de tratar as informações.
         request.done(function(results){
             $.each(results["Search"], function(index, movie){
-               // $('#results').append("<li data-imdbid = " + movie['imdbID'] + ">" + movie["Title"] + "</li>");
-                    //innerhtml
-               $('#results').append("<li onclick = \"wrapHtml(\'"+movie['imdbID']+"\')\">"+ movie["Title"]+"</li>");
+               $('#results').append("<li onclick = \"gerarHtml(\'"+movie['imdbID']+"\')\">"+ movie["Title"]+"</li>");
             });
         });
-//desnecessauro
-        var details = $('#results').delegate('li', 'click', function(f){
-            f.preventDefault();
-            var inner = $(f.target).data("imdbID");
-           // console.log(data);
-            console.log(details);
-           // $('#results').append(wrapHtml(movie));
-
-
-            var poster = $.ajax({
-                url: "http://img.omdbapi.com/?apikey=de97b68d",
-                async: true,
-                type: "get",
-                data: { i: inner },
-                dataType: "json"
-            });
-
-            poster.done(function(data){
-                $('#movieDetails').html("");
-                if (data["Poster"] == "N/A"){
-                    $('#movieDetails').append("<p>No picture available</p>");
-                }
-                else {
-                    $('#movieDetails').append("<img src='" + data["Poster"] + "'</img>");
-                }
-            });
-        });
-    });
-
-
+     });
 });
